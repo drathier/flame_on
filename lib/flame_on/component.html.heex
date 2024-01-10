@@ -138,6 +138,20 @@
     <%= submit("Flame On!", class: "submit", disabled: !@capture_changeset.valid? or @capturing?) %>
   </.form>
   <br />
+  <.form
+    :let={f}
+    for={@capture_changeset}
+    phx-submit="render_sampled_trace"
+    phx-target={@myself}
+    class="flame-on-form"
+  >
+    <%= label(f, :raw_trace, class: "label1") %>
+    <%= text_input(f, :raw_trace, class: "input1") %>
+    <%= error_tag(f, :raw_trace, "fo-error error1") %>
+
+    <%= submit("Render trace", class: "submit") %>
+  </.form>
+  <br />
   <%= if @capturing? do %>
     Capturing on <%= target_or_local_node(@target_node) %>...<br />
   <% end %>

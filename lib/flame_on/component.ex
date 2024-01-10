@@ -7,6 +7,7 @@ defmodule FlameOn.Component do
   alias FlameOn.Capture.Block
   alias FlameOn.Capture.Config
   alias FlameOn.Component.CaptureSchema
+  alias FlameOn.Capture.Sampler
 
   def update(%{flame_on_update: root_block}, socket) do
     socket =
@@ -79,6 +80,23 @@ defmodule FlameOn.Component do
       end
 
     socket = assign(socket, :capture_changeset, changeset)
+    {:noreply, socket}
+  end
+
+  def handle_event("render_sampled_trace", %{"capture_schema" => %{"raw_trace" => raw_trace}}, socket) do
+    {trace, _} = Code.eval_string(raw_trace)
+    IO.inspect(trace)
+    [root_block] = Sampler.to_blocks(trace)
+    IO.inspect(root_block)
+
+    socket =
+      socket
+      |> assign(:capturing?, false)
+      |> assign(:capture_timed_out?, false)
+      |> assign(:root_block, root_block)
+      |> assign(:viewing_block, root_block)
+      |> assign(:view_block_path, [])
+
     {:noreply, socket}
   end
 
