@@ -25,8 +25,6 @@ defmodule FlameOn.Capture.Sampler do
   def root_mfa(), do: {:placeholder_module, :placeholder_fn, 42}
 
   def stack_to_mfa([]), do: []
-  def stack_to_mfa(:undefined), do: [{Sampler.Meta, :process_is_missing, 0}]
-
   def stack_to_mfa(stack) do
     max_ts = stack |> Enum.map(fn {timestamp, _} -> timestamp end) |> Enum.max()
 
