@@ -85,9 +85,9 @@ defmodule FlameOn.Component do
 
   def handle_event("render_sampled_trace", %{"capture_schema" => %{"raw_trace" => raw_trace}}, socket) do
     {trace, _} = Code.eval_string(raw_trace)
-    IO.inspect(trace)
+    #IO.inspect(trace)
     [root_block] = Sampler.to_blocks(trace)
-    IO.inspect(root_block)
+    #IO.inspect(root_block)
 
     socket =
       socket
