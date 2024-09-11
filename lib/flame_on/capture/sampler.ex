@@ -49,17 +49,15 @@ defmodule FlameOn.Capture.Sampler do
     end
   end
 
-  defp run_old(timestamp, [], newest_same, blocks), do: blocks
-  defp run_old(timestamp, [old|olds], newest_same, blocks) do
+  defp run_old(_, [], _, blocks), do: blocks
+  defp run_old(timestamp, [_|olds], newest_same, blocks) do
     next_oldest = List.first(olds ++ [newest_same])
     new_blocks = Stack.handle_trace_return_to(blocks, next_oldest, timestamp)
     run_old(timestamp, olds, newest_same, new_blocks)
   end
 
   defp run_new(_, [], blocks), do: blocks
-
   defp run_new(timestamp, [new | newx], blocks) do
-    # IO.inspect {:trace_call, timestamp, new}
     blocks = Stack.handle_trace_call(blocks, new, timestamp)
     run_new(timestamp, newx, blocks)
   end
