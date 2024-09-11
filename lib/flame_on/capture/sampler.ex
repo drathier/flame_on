@@ -5,19 +5,13 @@ defmodule FlameOn.Capture.Sampler do
   def to_blocks(stacks) do
     to_blocks(stack_to_mfa(stacks), [], [])
   end
-
   def to_blocks([], _, blocks), do: Stack.finalize_stack(blocks)
-
   def to_blocks([{timestamp, stack} | stacks], last_stack, blocks) do
+    # INVARIANT[drathier]: head of list is most recently called fn
     {same, new, old} = diff_suffix(stack, last_stack)
 
-    blocks =
-      if old == [] do
-        blocks
-      else
-        run_same(timestamp, same, blocks)
-      end
-
+    newest_same = List.first(same)
+    blocks = run_old(timestamp, old, newest_same, blocks)
     blocks = run_new(timestamp, Enum.reverse(new), blocks)
     to_blocks(stacks, stack, blocks)
   end
@@ -40,7 +34,7 @@ defmodule FlameOn.Capture.Sampler do
 
   defp diff_suffix(a, b) do
     {s, a1, b1} = diff_prefix(Enum.reverse(a), Enum.reverse(b))
-    {Enum.reverse(s), Enum.reverse(a1), Enum.reverse(b1)}
+    {s, Enum.reverse(a1), Enum.reverse(b1)}
   end
 
   defp diff_prefix(a, b), do: diff_prefix(a, b, {[], [], []})
@@ -55,13 +49,11 @@ defmodule FlameOn.Capture.Sampler do
     end
   end
 
-  defp run_same(timestamp, sames, blocks) do
-    the_same = List.last(sames)
-    # IO.inspect {:trace_call_dummy, timestamp, dummy_to_pad_stack_by_one()}
-    # IO.inspect {:trace_return, timestamp, the_same}
-    # blocks = Stack.handle_trace_call(blocks, dummy_to_pad_stack_by_one(), timestamp - 1)
-    blocks = Stack.handle_trace_return_to(blocks, the_same, timestamp)
-    blocks
+  defp run_old(timestamp, [], newest_same, blocks), do: blocks
+  defp run_old(timestamp, [old|olds], newest_same, blocks) do
+    next_oldest = List.first(olds ++ [newest_same])
+    new_blocks = Stack.handle_trace_return_to(blocks, next_oldest, timestamp)
+    run_old(timestamp, olds, newest_same, new_blocks)
   end
 
   defp run_new(_, [], blocks), do: blocks
